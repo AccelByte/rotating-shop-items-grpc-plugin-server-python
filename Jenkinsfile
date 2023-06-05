@@ -73,14 +73,14 @@ pipeline {
         sh "make build"
       }
     }
-    // stage('Test') {
-    //   agent {
-    //     label "justice-codegen-sdk"
-    //   }
-    //   steps {
-    //     sh "make test"
-    //   }
-    // }
+    stage('Test') {
+      agent {
+        label "justice-codegen-sdk"
+      }
+      steps {
+        sh "make test"
+      }
+    }
   }
   post {
     success {
