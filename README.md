@@ -47,13 +47,11 @@ It is configured by default to send metrics, traces, and logs to the observabili
 
    f. make
    
-   g. Python v3.9
+   g. python v3.9
 
    h. git
 
-   i. [ngrok](https://ngrok.com/)
-
-   j. [postman](https://www.postman.com/)
+   i. [postman](https://www.postman.com/)
 
 2. A local copy of [grpc-plugin-dependencies](https://github.com/AccelByte/grpc-plugin-dependencies) repository.
 
@@ -78,9 +76,9 @@ To be able to run this sample app, you will need to follow these setup steps.
 
    ```
    AB_BASE_URL=https://demo.accelbyte.io      # Base URL of AccelByte Gaming Services demo environment
-   AB_CLIENT_ID='xxxxxxxxxx'                  # Use Client ID from the Setup section
-   AB_CLIENT_SECRET='xxxxxxxxxx'              # Use Client Secret from the Setup section
-   AB_NAMESPACE='xxxxxxxxxx'                  # Use Namespace ID from the Setup section
+   AB_CLIENT_ID='xxxxxxxxxx'                  # Use Client ID from the Prerequisites section
+   AB_CLIENT_SECRET='xxxxxxxxxx'              # Use Client Secret from the Prerequisites section
+   AB_NAMESPACE='xxxxxxxxxx'                  # Use Namespace ID from the Prerequisites section
    PLUGIN_GRPC_SERVER_AUTH_ENABLED=false      # Enable or disable access token and permission verification
    ```
 
@@ -123,7 +121,7 @@ docker-compose up --build
 
 ## Testing
 
-### Functional Test in Local Development Environment
+### Test Functionality in Local Development Environment
 
 The custom functions in this sample app can be tested locally using `postman`.
 
@@ -131,13 +129,13 @@ The custom functions in this sample app can be tested locally using `postman`.
 
    > :warning: **Make sure to start dependency services with mTLS disabled for now**: It is currently not supported by AccelByte Gaming Services but it will be enabled later on to improve security. If it is enabled, the gRPC client calls without mTLS will be rejected by Envoy proxy.
 
-2. Start this `gRPC server` sample app.
+2. Run this `gRPC server` sample app.
 
 3. Open `postman`, create a new `gRPC request`, and enter `localhost:10000` as server URL. 
 
    > :exclamation: We are essentially accessing the `gRPC server` through an `Envoy` proxy which is a part of `dependency services`.
 
-4. Still in `postman`, continue by selecting `Section/GetRotationItems` method and invoke it with the sample message below.
+4. In `postman`, continue by selecting `Section/GetRotationItems` method and invoke it with the sample message below.
 
    ```json
    {
@@ -186,7 +184,7 @@ The custom functions in this sample app can be tested locally using `postman`.
    }
    ```
 
-5. If successful, you will see the item(s) in the response.
+   If successful, you will see the item(s) in the response.
 
    ```json
    {
@@ -198,6 +196,102 @@ The custom functions in this sample app can be tested locally using `postman`.
       ]
    }
    ```
+
+5. Still in `postman`, continue by selecting `Section/Backfill` method and invoke it with the sample message below.
+
+   ```json
+   {
+   "userId": "c6354ec948604a1c9f5c026795e420d9",
+   "namespace": "accelbyte",
+   "items": [
+      {
+         "itemId": "7fcad276c5df4128b3f38564abd012c4",
+         "itemSku": "S1",
+         "owned": true,
+         "index": 1
+      },
+      {
+         "itemId": "59ab1f45979e460295178deb609ec5d6",
+         "itemSku": "S2",
+         "owned": false,
+         "index": 2
+      },
+      {
+         "itemId": "e51ae70222af4fba96ba8d7f631b8407",
+         "itemSku": "S3",
+         "owned": false,
+         "index": 3
+      }
+   ],
+   "sectionName": "example",
+   "sectionId": "9f5c026795e420d9c6354ec948604a1c"
+   }
+   ```
+
+   If successful, you will see the item(s) in the response.
+
+   ```json
+   {
+      "backfilledItems": [
+         {
+               "itemId": "687d110a30dc401ea5f76cd8fafff8e5",
+               "itemSku": "",
+               "index": 1
+         }
+      ]
+   }
+   ```
+
+### Test Integration with AccelByte Gaming Services
+
+After passing functional test in local development environment, you may want to perform
+integration test with `AccelByte Gaming Services`. Here, we are going to expose the `gRPC server`
+in local development environment to the internet so that it can be called by
+`AccelByte Gaming Services`. To do this without requiring public IP, we can use [ngrok](https://ngrok.com/)
+
+1. Start the `dependency services` by following the `README.md` in the [grpc-plugin-dependencies](https://github.com/AccelByte/grpc-plugin-dependencies) repository.
+
+   > :warning: **Make sure to start dependency services with mTLS disabled for now**: It is currently not supported by AccelByte Gaming Services but it will be enabled later on to improve security. If it is enabled, the gRPC client calls without mTLS will be rejected by Envoy proxy.
+
+2. Start this `gRPC server` sample app.
+
+3. Sign-in/sign-up to [ngrok](https://ngrok.com/) and get your auth token in `ngrok` dashboard.
+
+4. In [grpc-plugin-dependencies](https://github.com/AccelByte/grpc-plugin-dependencies) repository folder, run the following command to expose the `Envoy` proxy port connected to the `gRPC server` in local development environment to the internet. Take a note of the `ngrok` forwarding URL e.g. `tcp://0.tcp.ap.ngrok.io:xxxxx`.
+
+   ```
+   make ngrok NGROK_AUTHTOKEN=xxxxxxxxxxx    # Use your ngrok auth token
+   ```
+
+5. [Create an OAuth Client](https://docs.accelbyte.io/guides/access/iam-client.html) with `confidential` client type with the following permissions. Keep the `Client ID` and `Client Secret`.
+
+   - ADMIN:NAMESPACE:{namespace}:CONFIG:SERVICEPLUGIN [READ, UPDATE, DELETE]
+   - ADMIN:NAMESPACE:{namespace}:STORE [ READ, CREATE, UPDATE, DELETE ]
+   - ADMIN:NAMESPACE:{namespace}:CATEGORY [READ, CREATE]
+   - ADMIN:NAMESPACE:{namespace}:ITEM [READ, CREATE]
+   - NAMESPACE:{namespace}:USER:{userId}:STORE [READ]
+
+   > :warning: **Oauth Client created in this step is different from the one from Prerequisites section:** It is required by [demo.py](demo/demo.py) script in the next step to register the `gRPC Server` URL and create test data.
+
+6. Create a user for testing. Keep the `Username` and `Password`.
+   
+7. Set the necessary environment variables and run the [demo.py](demo/demo.py) script. The script will setup the necessary configuration, create test data, and run a user operation that triggers either `rotation` or `backfill` function in this `gRPC server` sample app.
+
+   ```
+   export AB_BASE_URL='https://demo.accelbyte.io'
+   export AB_CLIENT_ID='xxxxxxxxxx'       # Use Client ID from the previous step
+   export AB_CLIENT_SECRET='xxxxxxxxxx'   # Use Client secret from the previous step
+   export AB_NAMESPACE='xxxxxxxxxx'       # Use your Namespace ID
+   export AB_USERNAME='xxxxxxxxxx'        # Use the username of test user you created
+   export AB_PASSWORD='xxxxxxxxxx'        # Use the password of test user you created
+   cd demo                 # Go to demo folder in this grpc server sample app
+   make setup              # Run makefile target to setup virtualenv venv
+   . venv/bin/activate     # Activate virtualenv venv
+   python demo.py 0.tcp.ap.ngrok.io:xxxxx rotation    # For rotation function, using your ngrok forwarding URL
+   python demo.py 0.tcp.ap.ngrok.io:xxxxx backfill    # For backfill function, using your ngrok forwarding URL
+   ```
+ 
+> :warning: **Ngrok free plan has some limitations**: You may want to use paid plan if the traffic is high.
 
 ## Advanced
 
