@@ -35,7 +35,7 @@ It is configured by default to send metrics, traces, and logs to the observabili
   
    b. curl
 
-   c. docker
+   c. docker v23.x
 
    d. docker-compose v2.x
 
@@ -266,7 +266,7 @@ in local development environment to the internet so that it can be called by
 5. [Create an OAuth Client](https://docs.accelbyte.io/guides/access/iam-client.html) with `confidential` client type with the following permissions. Keep the `Client ID` and `Client Secret`.
 
    - ADMIN:NAMESPACE:{namespace}:CONFIG:SERVICEPLUGIN [READ, UPDATE, DELETE]
-   - ADMIN:NAMESPACE:{namespace}:STORE [ READ, CREATE, UPDATE, DELETE ]
+   - ADMIN:NAMESPACE:{namespace}:STORE [READ, CREATE, UPDATE, DELETE]
    - ADMIN:NAMESPACE:{namespace}:CATEGORY [READ, CREATE]
    - ADMIN:NAMESPACE:{namespace}:ITEM [READ, CREATE]
    - NAMESPACE:{namespace}:USER:{userId}:STORE [READ]
