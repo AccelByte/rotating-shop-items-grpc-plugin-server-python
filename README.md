@@ -185,30 +185,30 @@ The custom functions in this sample app can be tested locally using `postman`.
 
    ```json
    {
-   "userId": "c6354ec948604a1c9f5c026795e420d9",
-   "namespace": "accelbyte",
-   "items": [
-      {
-         "itemId": "7fcad276c5df4128b3f38564abd012c4",
-         "itemSku": "S1",
-         "owned": true,
-         "index": 1
-      },
-      {
-         "itemId": "59ab1f45979e460295178deb609ec5d6",
-         "itemSku": "S2",
-         "owned": false,
-         "index": 2
-      },
-      {
-         "itemId": "e51ae70222af4fba96ba8d7f631b8407",
-         "itemSku": "S3",
-         "owned": false,
-         "index": 3
-      }
-   ],
-   "sectionName": "example",
-   "sectionId": "9f5c026795e420d9c6354ec948604a1c"
+      "userId": "c6354ec948604a1c9f5c026795e420d9",
+      "namespace": "accelbyte",
+      "items": [
+         {
+            "itemId": "7fcad276c5df4128b3f38564abd012c4",
+            "itemSku": "S1",
+            "owned": true,
+            "index": 1
+         },
+         {
+            "itemId": "59ab1f45979e460295178deb609ec5d6",
+            "itemSku": "S2",
+            "owned": false,
+            "index": 2
+         },
+         {
+            "itemId": "e51ae70222af4fba96ba8d7f631b8407",
+            "itemSku": "S3",
+            "owned": false,
+            "index": 3
+         }
+      ],
+      "sectionName": "example",
+      "sectionId": "9f5c026795e420d9c6354ec948604a1c"
    }
    ```
 
