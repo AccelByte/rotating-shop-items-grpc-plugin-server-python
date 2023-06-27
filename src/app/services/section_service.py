@@ -3,10 +3,13 @@
 # and restrictions contact your company contract manager.
 
 from datetime import datetime
+import json
 from logging import Logger, getLogger
 import math
 from typing import List, Optional
 import uuid
+
+from google.protobuf.json_format import MessageToDict
 
 from app.proto.section_pb2 import (
     BackfillRequest,
@@ -33,7 +36,7 @@ class AsyncSectionService(SectionServicer):
         """*
         GetRotationItems: get current rotation items, this method will be called by rotation type is CUSTOM
         """
-        self.logger.info("Received GetRotationItems request")
+        self.log_payload(f'{self.GetRotationItems.__name__} request: %s', request)
         items : List[SectionItemObject] = request.sectionObject.items
         input_count : int = len(items)
         current_point : float = float(datetime.now().hour)
@@ -41,6 +44,7 @@ class AsyncSectionService(SectionServicer):
         selected_item : SectionItemObject = items[selected_index]
         response_items : List[SectionItemObject] = [selected_item]
         response : GetRotationItemsResponse = GetRotationItemsResponse(expiredAt=0, items=response_items)
+        self.log_payload(f'{self.GetRotationItems.__name__} response: %s', response)
         return response
 
     async def Backfill(self, request : BackfillRequest, context):
@@ -50,7 +54,7 @@ class AsyncSectionService(SectionServicer):
         2. Backfill type is CUSTOM
         3. User already owned any one of current rotation items.
         """
-        self.logger.info("Received Backfill request")
+        self.log_payload(f'{self.Backfill.__name__} request: %s', request)
         new_items : List[BackfilledItemObject] = []
         item : RotationItemObject
         for item in request.items:
@@ -58,5 +62,13 @@ class AsyncSectionService(SectionServicer):
                  new_item : BackfilledItemObject = BackfilledItemObject(itemId=str(uuid.uuid4()).replace("-",""), index=item.index)
                  new_items.append(new_item)
         response : BackfillResponse = BackfillResponse(backfilledItems=new_items)
+        self.log_payload(f'{self.Backfill.__name__} response: %s', response)
         return response
+    
+    def log_payload(self, format : str, payload):
+        if not self.logger:
+            return
+        payload_dict = MessageToDict(payload, preserving_proto_field_name=True)
+        payload_json = json.dumps(payload_dict)
+        self.logger.info(format % payload_json)
     
