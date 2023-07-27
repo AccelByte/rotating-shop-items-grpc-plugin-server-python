@@ -249,10 +249,11 @@ in local development environment to the internet so that it can be called by
 
 5. [Create an OAuth Client](https://docs.accelbyte.io/guides/access/iam-client.html) with `confidential` client type with the following permissions. Keep the `Client ID` and `Client Secret`.
 
-   - ADMIN:NAMESPACE:{namespace}:CONFIG:SERVICEPLUGIN [READ, UPDATE, DELETE]
+   - ADMIN:NAMESPACE:{namespace}:PLUGIN:CATALOG [READ, UPDATE, DELETE]
    - ADMIN:NAMESPACE:{namespace}:STORE [READ, CREATE, UPDATE, DELETE]
    - ADMIN:NAMESPACE:{namespace}:CATEGORY [READ, CREATE]
    - ADMIN:NAMESPACE:{namespace}:ITEM [READ, CREATE]
+   - ADMIN:NAMESPACE:{namespace}:USER:*:ENTITLEMENT [CREATE]
    - NAMESPACE:{namespace}:USER:{userId}:STORE [READ]
 
    > :warning: **Oauth Client created in this step is different from the one from Prerequisites section:** It is required by [demo.py](demo/demo.py) script in the next step to register the `gRPC Server` URL and create test data.

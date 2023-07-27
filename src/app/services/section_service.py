@@ -59,7 +59,8 @@ class AsyncSectionService(SectionServicer):
         item : RotationItemObject
         for item in request.items:
              if item.owned:
-                 new_item : BackfilledItemObject = BackfilledItemObject(itemId=str(uuid.uuid4()).replace("-",""), index=item.index)
+                 backfill_item_id = request.items[-1].itemId    # Use the last item in the request for backfill for demo purpose only
+                 new_item : BackfilledItemObject = BackfilledItemObject(itemId=backfill_item_id, index=item.index)
                  new_items.append(new_item)
         response : BackfillResponse = BackfillResponse(backfilledItems=new_items)
         self.log_payload(f'{self.Backfill.__name__} response: %s', response)

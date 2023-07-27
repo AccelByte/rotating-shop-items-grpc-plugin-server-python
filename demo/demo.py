@@ -5,25 +5,30 @@ from typing import List, Tuple, Union
 from datetime import datetime, timedelta
 from os import environ
 
-import accelbyte_py_sdk
+from accelbyte_py_sdk import AccelByteSDK
 import accelbyte_py_sdk.services.auth as auth_service
 import accelbyte_py_sdk.api.iam as iam_service
 import accelbyte_py_sdk.api.iam.models as iam_models
 import accelbyte_py_sdk.api.platform as platform_service
 import accelbyte_py_sdk.api.platform.models as platform_models
 
-def get_user_info() -> Tuple[iam_models.ModelUserResponseV3, any]:
-    return iam_service.public_get_my_user_v3() 
+def get_user_info(sdk) -> Tuple[iam_models.ModelUserResponseV3, any]:
+    return iam_service.public_get_my_user_v3(sdk=sdk) 
 
-def set_grpc_plugin_server(namespace : str, grpc_server_url : str):
-    return platform_service.update_service_plugin_config(
+def set_grpc_plugin_server(namespace : str, grpc_server_url : str, sdk):
+    return platform_service.update_section_plugin_config(
         namespace=namespace,
-        body=platform_models.ServicePluginConfigUpdate.create(
+        body=platform_models.SectionPluginConfigUpdate.create(
+            extend_type=platform_models.SectionPluginConfigUpdateExtendTypeEnum.CUSTOM,
+            custom_config=platform_models.BaseCustomConfig.create(
+                connection_type=platform_models.BaseCustomConfigConnectionTypeEnum.INSECURE,
                 grpc_server_address=grpc_server_url
             )
+        ),
+        sdk=sdk
     )
         
-def create_store(namespace : str, title : str) -> Tuple[platform_models.StoreInfo, any]:
+def create_store(namespace : str, title : str, sdk) -> Tuple[platform_models.StoreInfo, any]:
     return platform_service.create_store(
         namespace=namespace,
         body=platform_models.StoreCreate.create(
@@ -33,26 +38,29 @@ def create_store(namespace : str, title : str) -> Tuple[platform_models.StoreInf
             default_region="US",
             supported_languages=["en"],
             supported_regions=["US"]
-        )
+        ),
+        sdk=sdk
     )
     
-def publish_store(namespace : str, store_id : str):
-    platform_service.publish_all(
+def publish_store(namespace : str, store_id : str, sdk):
+    return platform_service.publish_all(
         namespace=namespace,
-        store_id=store_id
+        store_id=store_id,
+        sdk=sdk
     )
 
-def create_category(namespace : str, store_id : str, category_path : str):
+def create_category(namespace : str, store_id : str, category_path : str, sdk):
     platform_service.create_category(
         namespace=namespace,
         store_id=store_id,
         body=platform_models.CategoryCreate.create(
             category_path=category_path,
             localization_display_names={"en" : category_path}
-        )
+        ),
+        sdk=sdk
     )
 
-def create_store_view(namespace : str, store_id : str, title : str) -> Tuple[platform_models.FullViewInfo, any]:
+def create_store_view(namespace : str, store_id : str, title : str, sdk) -> Tuple[platform_models.FullViewInfo, any]:
     return platform_service.create_view(
         namespace=namespace,
         store_id=store_id,
@@ -60,10 +68,11 @@ def create_store_view(namespace : str, store_id : str, title : str) -> Tuple[pla
             name=title,
             display_order=1,
             localizations={"en" : platform_models.Localization.create(title=title)}
-        )
+        ),
+        sdk=sdk
     )
     
-def create_item(namespace : str, store_id : str, category_path : str, item_base_name : str, item_base_index : int) -> Tuple[platform_models.FullItemInfo, any]:
+def create_item(namespace : str, store_id : str, category_path : str, item_base_name : str, item_base_index : int, sdk) -> Tuple[platform_models.FullItemInfo, any]:
     title="Item %s %s" % (item_base_name, item_base_index)
     sku="SKU_%s_%s" % (item_base_name, item_base_index)
     return platform_service.create_item(
@@ -71,7 +80,7 @@ def create_item(namespace : str, store_id : str, category_path : str, item_base_
         store_id=store_id,
         body=platform_models.ItemCreate.create(
             name=title,
-            item_type=platform_models.ItemCreateItemTypeEnum.SEASON,
+            item_type=platform_models.ItemCreateItemTypeEnum.INGAMEITEM,
             category_path=category_path,
             entitlement_type=platform_models.ItemCreateEntitlementTypeEnum.DURABLE,
             season_type=platform_models.ItemCreateSeasonTypeEnum.TIER,
@@ -86,10 +95,11 @@ def create_item(namespace : str, store_id : str, category_path : str, item_base_
                 currency_type=platform_models.RegionDataItemCurrencyTypeEnum.REAL,
                 price=(item_base_index+1)*2
             )]}
-        )
+        ),
+        sdk=sdk
     )
     
-def create_section(namespace : str, store_id : str, category_path : str, view_id : str, section_base_name : str, item_ids : List[str]) -> Tuple[platform_models.FullSectionInfo, None]:
+def create_section(namespace : str, store_id : str, category_path : str, view_id : str, section_base_name : str, item_ids : List[str], sdk) -> Tuple[platform_models.FullSectionInfo, None]:
     title="Section %s" % (section_base_name)
     return platform_service.create_section(
         namespace=namespace,
@@ -108,10 +118,11 @@ def create_section(namespace : str, store_id : str, category_path : str, view_id
             ),
             localizations={"en": platform_models.Localization.create(title=title)},
             items=[platform_models.SectionItem.create(id_=id) for id in item_ids]
-        )
+        ),
+        sdk=sdk
     )
         
-def enable_custom_rotation_for_section(namespace : str, store_id : str, section_id : str, section_base_name : str):
+def enable_custom_rotation_for_section(namespace : str, store_id : str, section_id : str, section_base_name : str, sdk):
     title="Section %s" % (section_base_name)
     platform_service.update_section(
         namespace=namespace,
@@ -123,10 +134,11 @@ def enable_custom_rotation_for_section(namespace : str, store_id : str, section_
             start_date=(datetime.today() - timedelta(days=1)).isoformat(),
             end_date=(datetime.today() + timedelta(days=1)).isoformat(),
             localizations={"en": platform_models.Localization.create(title=title)}
-        )
+        ),
+        sdk=sdk
     )
 
-def enable_fixed_rotation_with_custom_backfill_for_section(namespace : str, store_id : str, section_id : str, section_base_name : str):
+def enable_fixed_rotation_with_custom_backfill_for_section(namespace : str, store_id : str, section_id : str, section_base_name : str, sdk):
     title="Section %s" % (section_base_name)
     platform_service.update_section(
         namespace=namespace,
@@ -140,33 +152,49 @@ def enable_fixed_rotation_with_custom_backfill_for_section(namespace : str, stor
             localizations={"en": platform_models.Localization.create(title=title)},
             fixed_period_rotation_config=platform_models.FixedPeriodRotationConfig.create(
                 backfill_type=platform_models.FixedPeriodRotationConfigBackfillTypeEnum.CUSTOM,
-                rule=platform_models.FixedPeriodRotationConfigRuleEnum.SEQUENCE
+                rule=platform_models.FixedPeriodRotationConfigRuleEnum.SEQUENCE,
+                duration=24 * 60,
+                item_count=3
             )
-        )
+        ),
+        sdk=sdk
     )
     
-def get_active_sections(namespace : str, view_id : str, user_id : str) -> Tuple[Union[None, List[platform_models.SectionInfo]],any]:
+def grant_entitlement(namespace : str, store_id : str, user_id : str, item_id : str, count : int, sdk):
+    platform_service.grant_user_entitlement(
+        user_id=user_id,
+        namespace=namespace,
+        body=[
+            platform_models.EntitlementGrant.create(
+                item_id=item_id,
+                quantity=count,
+                source=platform_models.EntitlementGrantSourceEnum.PURCHASE,
+                store_id=store_id,
+                item_namespace=namespace
+            )
+        ],
+        sdk=sdk
+    )
+    
+def get_active_sections(namespace : str, view_id : str, user_id : str, sdk) -> Tuple[Union[None, List[platform_models.SectionInfo]],any]:
     return platform_service.public_list_active_sections(
         namespace=namespace,
         view_id=view_id,
-        user_id=user_id
-    )
-    
-def publish_store(namespace : str, store_id : str):
-    return platform_service.publish_all(
-        namespace=namespace,
-        store_id=store_id
+        user_id=user_id,
+        sdk=sdk
     ) 
 
-def delete_store(namespace : str, store_id : str):
+def delete_store(namespace : str, store_id : str, sdk):
     return platform_service.delete_store(
         namespace=namespace,
-        store_id=store_id
+        store_id=store_id,
+        sdk=sdk
     )
 
-def unset_grpc_plugin_server(namespace : str):
-    return platform_service.delete_service_plugin_config(
-        namespace=namespace
+def unset_grpc_plugin_server(namespace : str, sdk):
+    return platform_service.delete_section_plugin_config(
+        namespace=namespace,
+        sdk=sdk
     )
 
 def main():
@@ -193,8 +221,6 @@ def main():
     password = environ["AB_PASSWORD"]
     namespace = environ["AB_NAMESPACE"]
     
-    accelbyte_py_sdk.initialize()
-    
     category_path = "/customitemrotationtest"
     item_count = 10
 
@@ -202,23 +228,35 @@ def main():
     store_info = None
     
     try:
+        
+        client_sdk = AccelByteSDK()
+        user_sdk = AccelByteSDK()
+        
+        client_sdk.initialize()
+        user_sdk.initialize()
+        
         print("# Arrange")
         print("## Login user")
-        _, error = auth_service.login_user(username=username, password=password)
+        _, error = auth_service.login_user(username=username, password=password, sdk=user_sdk)
         if error:
             raise Exception(error)
         print("## Get user info")
-        user_info, error = get_user_info() 
+        user_info, error = get_user_info(sdk=user_sdk) 
+        if error:
+            raise Exception(error)
+        print("## Login client")
+        _, error = auth_service.login_client(sdk=client_sdk)
         if error:
             raise Exception(error)
         print("## Set gRPC server URL")
-        _, error = set_grpc_plugin_server(namespace=namespace, grpc_server_url=grpc_server_url)
+        _, error = set_grpc_plugin_server(namespace=namespace, grpc_server_url=grpc_server_url, sdk=client_sdk)
         if error:
             raise Exception(error)
         print("## Create store")
         store_info, error = create_store(
             namespace=namespace, 
-            title="Item Rotation Plugin Demo Store"
+            title="Item Rotation Plugin Demo Store",
+            sdk=client_sdk
         )
         if error:
             raise Exception(error)
@@ -226,7 +264,8 @@ def main():
         create_category(
             namespace=namespace,
             store_id=store_info.store_id,
-            category_path=category_path
+            category_path=category_path,
+            sdk=client_sdk
         )
         if error:
             raise Exception(error)
@@ -234,21 +273,23 @@ def main():
         view_info, error = create_store_view(
             namespace=namespace,
             store_id=store_info.store_id,
-            title="Item Rotation Default View"
+            title="Item Rotation Default View",
+            sdk=client_sdk
         )
         if error:
             raise Exception(error)
         print("## Create item")
         item_ids : List[str] = []
         for i in range(item_count):
-            print("- Item %s %s" % (dummy_base_name,i+1))
             new_item, error = create_item(
                 namespace=namespace,
                 store_id=store_info.store_id,
                 category_path=category_path,
                 item_base_name=dummy_base_name,
-                item_base_index=i+1
+                item_base_index=i+1,
+                sdk=client_sdk
             )
+            print("- %s" % (new_item))
             if error:
                 raise Exception(error)
             item_ids.append(new_item.item_id)
@@ -259,7 +300,8 @@ def main():
             category_path=category_path,
             view_id=view_info.view_id,
             section_base_name=dummy_base_name,
-            item_ids=item_ids
+            item_ids=item_ids,
+            sdk=client_sdk
         )
         if error:
             raise Exception(error)
@@ -270,7 +312,8 @@ def main():
                 namespace=namespace,
                 store_id=store_info.store_id,
                 section_id=section_info.section_id,
-                section_base_name=dummy_base_name
+                section_base_name=dummy_base_name,
+                sdk=client_sdk
             )
         else:
             print("## Enable fixed rotation with custom backfill for section")
@@ -278,10 +321,20 @@ def main():
                 namespace=namespace,
                 store_id=store_info.store_id,
                 section_id=section_info.section_id,
-                section_base_name=dummy_base_name
+                section_base_name=dummy_base_name,
+                sdk=client_sdk
+            )
+            print("## Grant item to user")
+            grant_entitlement(
+                namespace=namespace,
+                store_id=store_info.store_id,
+                user_id=user_info.user_id,
+                item_id=item_ids[0],
+                count=1,
+                sdk=client_sdk
             )
         print("## Publish store")
-        _, error = publish_store(namespace=namespace,store_id=store_info.store_id)
+        _, error = publish_store(namespace=namespace, store_id=store_info.store_id, sdk=client_sdk)
         if error:
             raise Exception(error)
         print("# Assert")
@@ -289,7 +342,8 @@ def main():
         active_sections, error = get_active_sections(
             namespace=namespace,
             view_id=view_info.view_id,
-            user_id=user_info.user_id
+            user_id=user_info.user_id,
+            sdk=user_sdk
         )
         if error:
             raise Exception(error)
@@ -299,18 +353,18 @@ def main():
             print("- Section %s:" % section.section_id)
             if section.current_rotation_items is not None and len(section.current_rotation_items) > 0:
                 for item in section.current_rotation_items:
-                    print("  - %s" % item.title)
+                    print("  - %s" % item)
     except:
         print(traceback.format_exc())
     finally:
         print("# Clean Up")
         if store_info:
             print("## Delete store")
-            _, error = delete_store(namespace=namespace, store_id=store_info.store_id)
+            _, error = delete_store(namespace=namespace, store_id=store_info.store_id, sdk=client_sdk)
             if error:
                 print("An error has occurred but ignored: %s" % error)
         print("## Unset gRPC server URL")
-        _, error = unset_grpc_plugin_server(namespace=namespace)
+        _, error = unset_grpc_plugin_server(namespace=namespace, sdk=client_sdk)
         if error:
             print("An error has occurred but ignored: %s" % error)
 
