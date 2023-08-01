@@ -27,10 +27,6 @@ ENV PYTHONUNBUFFERED=1
 COPY requirements.txt .
 RUN python -m pip install -r requirements.txt
 
-# Install spacy language
-# For more info, please refer to https://spacy.io/usage/models#languages
-RUN python -m spacy download en
-
 WORKDIR /app
 COPY . ./
 COPY --from=proto /build/src/app/proto src/app/proto

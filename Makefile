@@ -13,14 +13,12 @@ setup:
 	rm -rf ${VENV_DEV_DIR}
 	python3.9 -m venv ${VENV_DEV_DIR} \
 			&& ${VENV_DEV_DIR}/${PIP_EXEC_PATH} install --upgrade pip \
-			&& ${VENV_DEV_DIR}/${PIP_EXEC_PATH} install -r requirements-dev.txt \
-			&& ${VENV_DEV_DIR}/${PYTHON_EXEC_PATH} -m spacy download en
+			&& ${VENV_DEV_DIR}/${PIP_EXEC_PATH} install -r requirements-dev.txt
 
 	rm -rf ${VENV_DIR}
 	python3.9 -m venv ${VENV_DIR} \
 			&& ${VENV_DIR}/${PIP_EXEC_PATH} install --upgrade pip \
-			&& ${VENV_DIR}/${PIP_EXEC_PATH} install -r requirements.txt \
-			&& ${VENV_DIR}/${PYTHON_EXEC_PATH} -m spacy download en
+			&& ${VENV_DIR}/${PIP_EXEC_PATH} install -r requirements.txt
 
 clean:
 	rm -f ${SOURCE_DIR}/${PROTO_DIR}/*_grpc.py
