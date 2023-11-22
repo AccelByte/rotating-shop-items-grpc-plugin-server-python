@@ -27,7 +27,6 @@ from accelbyte_grpc_plugin.interceptors.metrics import (
 )
 from accelbyte_grpc_plugin.opts.grpc_health_checking import GRPCHealthCheckingOpt
 from accelbyte_grpc_plugin.opts.grpc_reflection import GRPCReflectionOpt
-from accelbyte_grpc_plugin.opts.loki import LokiOpt
 from accelbyte_grpc_plugin.opts.prometheus import PrometheusOpt
 from accelbyte_grpc_plugin.opts.zipkin import ZipkinOpt
 
@@ -67,8 +66,6 @@ async def main(port: int, **kwargs) -> None:
         namespace = env("NAMESPACE", "accelbyte")
 
     with env.prefixed(prefix="ENABLE_"):
-        if env.bool("LOKI", True):
-            opts.append(LokiOpt())
         if env.bool("PROMETHEUS", True):
             opts.append(PrometheusOpt())
         if env.bool("HEALTH_CHECKING", True):
