@@ -2,7 +2,7 @@
 # This is licensed software from AccelByte Inc, for limitations
 # and restrictions contact your company contract manager.
 
-from typing import Awaitable, Callable
+from typing import Awaitable, Callable, List
 
 from grpc import HandlerCallDetails, RpcMethodHandler, StatusCode
 from grpc.aio import AioRpcError, Metadata, ServerInterceptor
@@ -11,6 +11,12 @@ from accelbyte_py_sdk.token_validation import TokenValidatorProtocol
 
 
 class AuthorizationServerInterceptor(ServerInterceptor):
+    whitelisted_methods: List[str] = [
+        "/grpc.health.v1.Health/Check",
+        "/grpc.health.v1.Health/Watch",
+        "/grpc.reflection.v1alpha.ServerReflection/ServerReflectionInfo",
+    ]
+
     def __init__(
         self,
         resource: str,
