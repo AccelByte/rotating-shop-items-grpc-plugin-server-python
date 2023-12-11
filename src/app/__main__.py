@@ -80,6 +80,7 @@ async def main(port: int, **kwargs) -> None:
             from accelbyte_py_sdk import AccelByteSDK
             from accelbyte_py_sdk.core import MyConfigRepository, InMemoryTokenRepository
             from accelbyte_py_sdk.token_validation.caching import CachingTokenValidator
+            from accelbyte_py_sdk.services.auth import login_client
 
             resource = env("RESOURCE", "ADMIN:NAMESPACE:{namespace}:PIRGRPCSERVICE:CONFIG")
             action = env.int("ACTION", int(PermissionAction.READ | PermissionAction.UPDATE))
@@ -89,6 +90,9 @@ async def main(port: int, **kwargs) -> None:
             )
             sdk = AccelByteSDK()
             sdk.initialize(options={"config": config, "token": InMemoryTokenRepository()})
+            result, error = login_client(sdk=sdk)
+            if error:
+                raise Exception(str(error))
             token_validator = CachingTokenValidator(sdk)
             auth_server_interceptor = AuthorizationServerInterceptor(
                 resource=resource,
