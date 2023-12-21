@@ -5,71 +5,59 @@ flowchart LR
    subgraph AccelByte Gaming Services
    CL[gRPC Client]
    end
-   subgraph gRPC Server Deployment
-   SV["gRPC Server\n(YOU ARE HERE)"]
-   DS[Dependency Services]
-   CL --- DS
+   subgraph Extend Override App
+   SV["gRPC Server\n(you are here)"]
    end
-   DS --- SV
+   CL --- SV
 ```
 
-`AccelByte Gaming Services` capabilities can be extended using custom functions implemented in a `gRPC server`. If configured, custom functions in the `gRPC server` will be called by `AccelByte Gaming Services` instead of the default function.
-
-The `gRPC server` and the `gRPC client` can actually communicate directly. However, additional services are necessary to provide **security**, **reliability**, **scalability**, and **observability**. We call these services as `dependency services`. The [grpc-plugin-dependencies](https://github.com/AccelByte/grpc-plugin-dependencies) repository is provided as an example of what these `dependency services` may look like. It
-contains a docker compose which consists of these `dependency services`.
-
-> :warning: **grpc-plugin-dependencies is provided as example for local development purpose only:** The dependency services in the actual gRPC server deployment may not be exactly the same.
+`AccelByte Gaming Services`  features can be customized by using `Extend Override`
+apps. An `Extend Override` app is essentially a `gRPC server` which contains one 
+or more custom functions which can be called by `AccelByte Gaming Services` 
+instead of the default functions.
 
 ## Overview
 
-This repository contains a `rotating shop items gRPC server app` written in `Python`. It provides a simple custom rotating shop items function for platform service in `AccelByte Gaming Services`.
+This repository contains a sample `Extend Override` app for `rotating shop items`
+written in `Python`. It provides a simple custom rotating shop items function for 
+platform service in `AccelByte Gaming Services`.
 
-This sample app also shows how this `gRPC server` can be instrumented for better observability. 
-It is configured by default to send metrics, traces, and logs to the observability `dependency services` in [grpc-plugin-dependencies](https://github.com/AccelByte/grpc-plugin-dependencies).
+This sample app also shows the instrumentation setup necessary for 
+observability. It is required so that metrics, traces, and logs are able to 
+flow properly when the app is deployed.
 
 ## Prerequisites
 
 1. Windows 10 WSL2 or Linux Ubuntu 20.04 with the following tools installed.
 
    a. bash
-  
+
    b. curl
 
-   c. docker v23.x
+   c. make
 
-   d. docker-compose v2.x
+   d. docker v23.x
 
-   e. docker loki driver
+   e. python v3.9
 
-   ```
-   docker plugin install grafana/loki-docker-driver:latest --alias loki --grant-all-permissions
-   ```
+   f. git
 
-   f. make
+   g. jq
+
+   h. [postman](https://www.postman.com/)
+
+2. Access to `AccelByte Gaming Services` environment.
+
+   a. Base URL
    
-   g. python v3.9
+      - For `Starter` tier e.g.  https://spaceshooter.dev.gamingservices.accelbyte.io
+      - For `Premium` tier e.g.  https://dev.accelbyte.io
+      
+   b. [Create a Game Namespace](https://docs.accelbyte.io/gaming-services/getting-started/how-to/create-a-game-namespace/) if you don't have one yet. Keep the `Namespace ID`.
 
-   h. git
-
-   i. [postman](https://www.postman.com/)
-
-2. A local copy of [grpc-plugin-dependencies](https://github.com/AccelByte/grpc-plugin-dependencies) repository.
-
-   ```
-   git clone https://github.com/AccelByte/grpc-plugin-dependencies.git
-   ```
-
-3. Access to `AccelByte Gaming Services` demo environment.
-
-    a. Base URL: https://demo.accelbyte.io.
-
-    b. [Create a Game Namespace](https://docs.accelbyte.io/esg/uam/namespaces.html#tutorials) if you don't have one yet. Keep the `Namespace ID`.
-
-    c. [Create an OAuth Client](https://docs.accelbyte.io/guides/access/iam-client.html) with `confidential` client type. Keep the `Client ID` and `Client Secret`.
+   c. [Create an OAuth Client](https://docs.accelbyte.io/gaming-services/services/access/authorization/manage-access-control-for-applications/#create-an-iam-client) with confidential client type. Keep the `Client ID` and `Client Secret`.
 
 ## Setup
-
-To be able to run this sample app, you will need to follow these setup steps.
 
 1. Create a docker compose `.env` file by copying the content of [.env.template](.env.template) file.
 
@@ -79,15 +67,15 @@ To be able to run this sample app, you will need to follow these setup steps.
 2. Fill in the required environment variables in `.env` file as shown below.
 
    ```
-   AB_BASE_URL=https://demo.accelbyte.io      # Base URL of AccelByte Gaming Services demo environment
-   AB_CLIENT_ID='xxxxxxxxxx'                  # Use Client ID from the Prerequisites section
-   AB_CLIENT_SECRET='xxxxxxxxxx'              # Use Client Secret from the Prerequisites section
-   AB_NAMESPACE='xxxxxxxxxx'                  # Use Namespace ID from the Prerequisites section
-   PLUGIN_GRPC_SERVER_AUTH_ENABLED=false      # Enable or disable access token and permission verification
+   AB_BASE_URL=https://demo.accelbyte.io     # Base URL of AccelByte Gaming Services environment
+   AB_CLIENT_ID='xxxxxxxxxx'                 # Client ID from the Prerequisites section
+   AB_CLIENT_SECRET='xxxxxxxxxx'             # Client Secret from the Prerequisites section
+   AB_NAMESPACE='xxxxxxxxxx'                 # Namespace ID from the Prerequisites section
+   PLUGIN_GRPC_SERVER_AUTH_ENABLED=false     # Enable or disable access token and permission verification
    ```
 
    > :warning: **Keep PLUGIN_GRPC_SERVER_AUTH_ENABLED=false for now**: It is currently not
-   supported by AccelByte Gaming Services but it will be enabled later on to improve security. If it is
+   supported by `AccelByte Gaming Services`, but it will be enabled later on to improve security. If it is
    enabled, the gRPC server will reject any calls from gRPC clients without proper authorization
    metadata.
 
@@ -104,26 +92,26 @@ make build
 To (build and) run this sample app in a container, use the following command.
 
 ```
-docker-compose up --build
+docker compose up --build
 ```
 
 ## Testing
 
-### Test Functionality in Local Development Environment
+### Test in Local Development Environment
 
-The custom functions in this sample app can be tested locally using `postman`.
+The custom functions in this sample app can be tested locally using [postman](https://www.postman.com/).
 
-1. Run the `dependency services` by following the `README.md` in the [grpc-plugin-dependencies](https://github.com/AccelByte/grpc-plugin-dependencies) repository.
+1. Run this `gRPC server` sample app by using the command below.
 
-   > :warning: **Make sure to start dependency services with mTLS disabled for now**: It is currently not supported by `AccelByte Gaming Services` but it will be enabled later on to improve security. If it is enabled, the gRPC client calls without mTLS will be rejected.
+   ```shell
+   docker compose up --build
+   ```
 
-2. Run this `gRPC server` sample app.
+2. Open `postman`, create a new `gRPC request`, and enter `localhost:6565` as server URL (tutorial [here](https://blog.postman.com/postman-now-supports-grpc/)). 
 
-3. Open `postman`, create a new `gRPC request`, and enter `localhost:10000` as server URL. 
+   > :warning: **If you are running [grpc-plugin-dependencies](https://github.com/AccelByte/grpc-plugin-dependencies) stack alongside this sample app as mentioned in [Test Observability](#test-observability)**: Enter `localhost:10000` instead of `localhost:6565`. This way, the `gRPC server` will be called via `Envoy` service within `grpc-plugin-dependencies` stack instead of directly.
 
-   > :exclamation: We are essentially accessing the `gRPC server` through an `Envoy` proxy in `dependency services`.
-
-4. In `postman`, continue by selecting `Section/GetRotationItems` method and invoke it with the sample message below.
+3. Continue by selecting `Section/GetRotationItems` method and invoke it with the sample message below.
 
    ```json
    {
@@ -172,14 +160,14 @@ The custom functions in this sample app can be tested locally using `postman`.
    }
    ```
 
-   If successful, you will see the item(s) in the response.
+4. If successful, you will see the item(s) in the response.
 
    ```json
    {
       "items": [
          {
-            "itemId": "f0f745e8dac14614a0c30470438ecfed",
-            "itemSku": "S5"
+            "itemId": "59ab1f45979e460295178deb609ec5d6",
+            "itemSku": "S2"
          }
       ]
    }
@@ -189,34 +177,34 @@ The custom functions in this sample app can be tested locally using `postman`.
 
    ```json
    {
-      "userId": "c6354ec948604a1c9f5c026795e420d9",
-      "namespace": "accelbyte",
-      "items": [
-         {
-            "itemId": "7fcad276c5df4128b3f38564abd012c4",
-            "itemSku": "S1",
-            "owned": true,
-            "index": 1
-         },
-         {
-            "itemId": "59ab1f45979e460295178deb609ec5d6",
-            "itemSku": "S2",
-            "owned": false,
-            "index": 2
-         },
-         {
-            "itemId": "e51ae70222af4fba96ba8d7f631b8407",
-            "itemSku": "S3",
-            "owned": false,
-            "index": 3
-         }
-      ],
-      "sectionName": "example",
-      "sectionId": "9f5c026795e420d9c6354ec948604a1c"
+   "userId": "c6354ec948604a1c9f5c026795e420d9",
+   "namespace": "accelbyte",
+   "items": [
+      {
+         "itemId": "7fcad276c5df4128b3f38564abd012c4",
+         "itemSku": "S1",
+         "owned": true,
+         "index": 1
+      },
+      {
+         "itemId": "59ab1f45979e460295178deb609ec5d6",
+         "itemSku": "S2",
+         "owned": false,
+         "index": 2
+      },
+      {
+         "itemId": "e51ae70222af4fba96ba8d7f631b8407",
+         "itemSku": "S3",
+         "owned": false,
+         "index": 3
+      }
+   ],
+   "sectionName": "example",
+   "sectionId": "9f5c026795e420d9c6354ec948604a1c"
    }
    ```
 
-   If successful, you will see the item(s) in the response.
+6. If successful, you will see the item(s) in the response. The `itemId` will changed accordingly.
 
    ```json
    {
@@ -230,41 +218,43 @@ The custom functions in this sample app can be tested locally using `postman`.
    }
    ```
 
-### Test Integration with AccelByte Gaming Services
+### Test with AccelByte Gaming Services
 
-After passing functional test in local development environment, you may want to perform
-integration test with `AccelByte Gaming Services`. Here, we are going to expose the `gRPC server`
-in local development environment to the internet so that it can be called by
-`AccelByte Gaming Services`. To do this without requiring public IP, we can use [ngrok](https://ngrok.com/)
+For testing this sample app which is running locally with `AccelByte Gaming Services`,
+the `gRPC server` needs to be exposed to the internet. To do this without requiring 
+public IP, we can use something like [ngrok](https://ngrok.com/).
 
-1. Run the `dependency services` by following the `README.md` in the [grpc-plugin-dependencies](https://github.com/AccelByte/grpc-plugin-dependencies) repository.
+1. Run this `gRPC server` sample app by using command below.
 
-   > :warning: **Make sure to start dependency services with mTLS disabled for now**: It is currently not supported by `AccelByte Gaming Services` but it will be enabled later on to improve security. If it is enabled, the gRPC client calls without mTLS will be rejected.
-
-2. Run this `gRPC server` sample app.
-
-3. Sign-in/sign-up to [ngrok](https://ngrok.com/) and get your auth token in `ngrok` dashboard.
-
-4. In [grpc-plugin-dependencies](https://github.com/AccelByte/grpc-plugin-dependencies) repository folder, run the following command to expose the `Envoy` proxy port connected to the `gRPC server` in local development environment to the internet. Take a note of the `ngrok` forwarding URL e.g. `tcp://0.tcp.ap.ngrok.io:xxxxx`.
-
-   ```
-   make ngrok NGROK_AUTHTOKEN=xxxxxxxxxxx    # Use your ngrok auth token
+   ```shell
+   docker compose up --build
    ```
 
-5. [Create an OAuth Client](https://docs.accelbyte.io/guides/access/iam-client.html) with `confidential` client type with the following permissions. Keep the `Client ID` and `Client Secret`.
+2. Sign-in/sign-up to [ngrok](https://ngrok.com/) and get your auth token in `ngrok` dashboard.
 
-   - ADMIN:NAMESPACE:{namespace}:PLUGIN:CATALOG [READ, UPDATE, DELETE]
+3. In this sample app root directory, run the following helper command to expose `gRPC server` port in local development environment to the internet. Take a note of the `ngrok` forwarding URL e.g. `http://0.tcp.ap.ngrok.io:xxxxx`.
+
+   ```
+   make ngrok NGROK_AUTHTOKEN=xxxxxxxxxxx
+   ```
+
+   > :warning: **If you are running [grpc-plugin-dependencies](https://github.com/AccelByte/grpc-plugin-dependencies) stack alongside this sample app as mentioned in [Test Observability](#test-observability)**: Run the above 
+   command in `grpc-plugin-dependencies` directory instead of this sample app directory. 
+   This way, the `gRPC server` will be called via `Envoy` service within `grpc-plugin-dependencies` stack instead of directly.
+
+4. [Create an OAuth Client](https://docs.accelbyte.io/guides/access/iam-client.html) with `confidential` client type with the following permissions.  Keep the `Client ID` and `Client Secret`. This is different from the Oauth Client from the Setup section and it is required by CLI demo app [here](demo/cli/) in the next step to register the `gRPC Server` URL.
+
+   - ADMIN:NAMESPACE:{namespace}:CONFIG:SERVICEPLUGIN [READ, UPDATE, DELETE]
    - ADMIN:NAMESPACE:{namespace}:STORE [READ, CREATE, UPDATE, DELETE]
    - ADMIN:NAMESPACE:{namespace}:CATEGORY [READ, CREATE]
    - ADMIN:NAMESPACE:{namespace}:ITEM [READ, CREATE]
-   - ADMIN:NAMESPACE:{namespace}:USER:*:ENTITLEMENT [CREATE]
    - NAMESPACE:{namespace}:USER:{userId}:STORE [READ]
 
-   > :warning: **Oauth Client created in this step is different from the one from Prerequisites section:** It is required by [demo.py](demo/demo.py) script in the next step to register the `gRPC Server` URL and create test data.
+   > :warning: **Oauth Client created in this step is different from the one from Setup section:** It is required by CLI demo app [here](demo/cli/) in the next step to register the `gRPC Server` URL.
 
-6. Create a user for testing. Keep the `Username` and `Password`.
-   
-7. Set the necessary environment variables and run the [demo.py](demo/demo.py) script. The script will setup the necessary configuration, create test data, and run a user operation that triggers either `rotation` or `backfill` function in this `gRPC server` sample app.
+5. Create a user for testing. Keep the `Username` and `Password`.
+
+6. Set the necessary environment variables and run the [demo.py](demo/demo.py) script. The script will setup the necessary configuration, create test data, and run a user operation that triggers either `rotation` or `backfill` function in this `gRPC server` sample app.
 
    ```
    export AB_BASE_URL='https://demo.accelbyte.io'
@@ -282,17 +272,53 @@ in local development environment to the internet so that it can be called by
  
 > :warning: **Ngrok free plan has some limitations**: You may want to use paid plan if the traffic is high.
 
-### Deploy to AccelByte Gaming Services
+### Test Observability
 
-After passing integration test against locally running sample app you may want to deploy the sample app to AGS (AccelByte Gaming Services).
+To be able to see the how the observability works in this sample app locally, there are few things that need be setup before performing tests.
 
-1. Download and setup [extend-helper-cli](https://github.com/AccelByte/extend-helper-cli/)
-2. Create new Extend App on Admin Portal, please refer to docs [here](https://docs-preview.accelbyte.io/gaming-services/services/customization/getting-started-rotating-shop-items/)
-3. Do docker login using `extend-helper-cli`, please refer to its documentation
-4. Build and push sample app docker image to AccelByte ECR using the following command inside sample app directory
+1. Uncomment loki logging driver in [docker-compose.yaml](docker-compose.yaml)
+
+   ```
+    # logging:
+    #   driver: loki
+    #   options:
+    #     loki-url: http://host.docker.internal:3100/loki/api/v1/push
+    #     mode: non-blocking
+    #     max-buffer-size: 4m
+    #     loki-retries: "3"
+   ```
+
+   > :warning: **Make sure to install docker loki plugin beforehand**: Otherwise,
+   this sample app will not be able to run. This is required so that container logs
+   can flow to the `loki` service within `grpc-plugin-dependencies` stack. 
+   Use this command to install docker loki plugin: `docker plugin install grafana/loki-docker-driver:latest --alias loki --grant-all-permissions`.
+
+2. Clone and run [grpc-plugin-dependencies](https://github.com/AccelByte/grpc-plugin-dependencies) stack alongside this sample app. After this, Grafana 
+will be accessible at http://localhost:3000.
+
+   ```
+   git clone https://github.com/AccelByte/grpc-plugin-dependencies.git
+   cd grpc-plugin-dependencies
+   docker-compose up
+   ```
+
+   > :exclamation: More information about [grpc-plugin-dependencies](https://github.com/AccelByte/grpc-plugin-dependencies) is available [here](https://github.com/AccelByte/grpc-plugin-dependencies/blob/main/README.md).
+
+3. Perform testing. For example, by following [Test in Local Development Environment](#test-in-local-development-environment) or [Test with AccelByte Gaming Services](#test-with-accelbyte-gaming-services).
+
+## Deploying
+
+After done testing, you may want to deploy this app to `AccelByte Gaming Services`.
+
+1. [Create a new Extend Override App on Admin Portal](https://docs.accelbyte.io/gaming-services/services/extend/override-ags-feature/getting-started-with-matchmaking-customization/#create-an-extend-app). Keep the `Repository Url`.
+2. Download and setup [extend-helper-cli](https://github.com/AccelByte/extend-helper-cli/) (only if it has not been done previously).
+3. Perform docker login using `extend-helper-cli` using the following command.
+   ```
+   extend-helper-cli dockerlogin --namespace my-game --app my-app --login
+   ```
+   > :exclamation: More information about [extend-helper-cli](https://github.com/AccelByte/extend-helper-cli/) is available [here](https://github.com/AccelByte/extend-helper-cli/blob/master/README.md).
+4. Build and push sample app docker image to AccelByte ECR using the following command.
    ```
    make imagex_push REPO_URL=xxxxxxxxxx.dkr.ecr.us-west-2.amazonaws.com/accelbyte/justice/development/extend/xxxxxxxxxx/xxxxxxxxxx IMAGE_TAG=v0.0.1
    ```
-   > Note: the REPO_URL is obtained from step 2 in the app detail on the 'Repository Url' field
-
-Please refer to [getting started docs](https://docs-preview.accelbyte.io/gaming-services/services/customization/getting-started-rotating-shop-items/) for more detailed steps on how to deploy sample app to AccelByte Gaming Service.
+   > :exclamation: **The REPO_URL is obtained from step 1**: It can be found under 'Repository Url' in the app detail.
