@@ -6,8 +6,8 @@ TESTS_DIR = tests
 VENV_DIR = venv
 VENV_DEV_DIR = venv-dev
 
-IMAGE_NAME := $(shell basename "$$(pwd)")-app
 BUILDER := grpc-plugin-server-builder
+IMAGE_NAME := $(shell basename "$$(pwd)")-app
 
 setup:
 	rm -rf ${VENV_DEV_DIR}
@@ -74,3 +74,8 @@ help:
 run:
 	docker run --rm -t -u $$(id -u):$$(id -g) -v $$(pwd):/data -w /data -e PIP_CACHE_DIR=/data/.cache/pip --entrypoint /bin/sh python:3.9-slim \
 			-c 'GRPC_VERBOSITY=debug PYTHONPATH=${SOURCE_DIR}:${PROTO_DIR} ${VENV_DIR}/${PYTHON_EXEC_PATH} -m app'
+
+ngrok:
+	@test -n "$(NGROK_AUTHTOKEN)" || (echo "NGROK_AUTHTOKEN is not set" ; exit 1)
+	docker run --rm -it --net=host -e NGROK_AUTHTOKEN=$(NGROK_AUTHTOKEN) ngrok/ngrok:3-alpine \
+			tcp 6565	# gRPC server port
