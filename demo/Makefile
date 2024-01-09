@@ -1,4 +1,4 @@
-PYTHON_EXEC := python3.9
+PYTHON_EXEC := python3.10
 VENV_DIR := venv
 VENV_EXEC_DIR := bin
 
@@ -8,4 +8,4 @@ setup:
 	${VENV_DIR}/${VENV_EXEC_DIR}/pip install requests httpx websockets pyyaml pyjwt accelbyte-py-sdk
 
 run:
-	${VENV_DIR}/${VENV_EXEC_DIR}/${PYTHON_EXEC} app.py
+	${VENV_DIR}/${VENV_EXEC_DIR}/${PYTHON_EXEC} demo.py GRPC_SERVER_URL
