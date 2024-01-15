@@ -1,95 +1,74 @@
-PIP_EXEC_PATH = bin/pip
-PROTO_DIR = app/proto
-PYTHON_EXEC_PATH = bin/python
-SOURCE_DIR := src
-TESTS_DIR = tests
-VENV_DIR := venv
-VENV_DEV_DIR = venv-dev
-
-PROJECT_DIR ?= $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
-
 BUILDER := grpc-plugin-server-builder
 IMAGE_NAME := $(shell basename "$$(pwd)")-app
 
-setup:
-	rm -rf ${VENV_DEV_DIR}
-	python3.9 -m venv ${VENV_DEV_DIR} \
-			&& ${VENV_DEV_DIR}/${PIP_EXEC_PATH} install --upgrade pip \
-			&& ${VENV_DEV_DIR}/${PIP_EXEC_PATH} install -r requirements-dev.txt
+SOURCE_DIR := src
+VENV_DIR := venv
 
-	rm -rf ${VENV_DIR}
-	python3.9 -m venv ${VENV_DIR} \
-			&& ${VENV_DIR}/${PIP_EXEC_PATH} install --upgrade pip \
-			&& ${VENV_DIR}/${PIP_EXEC_PATH} install -r requirements.txt
+PROJECT_DIR ?= $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+
+.PHONY: venv test
 
 clean:
-	rm -f ${SOURCE_DIR}/${PROTO_DIR}/*_grpc.py
-	rm -f ${SOURCE_DIR}/${PROTO_DIR}/*_pb2.py
-	rm -f ${SOURCE_DIR}/${PROTO_DIR}/*_pb2.pyi
-	rm -f ${SOURCE_DIR}/${PROTO_DIR}/*_pb2_grpc.py
+	cd ${SOURCE_DIR}/app/proto \
+		&& rm -fv *_grpc.py *_pb2.py *_pb2.pyi *_pb2_grpc.py
 
 proto: clean
-	docker run -t --rm -u $$(id -u):$$(id -g) -v $(PROJECT_DIR):/data/ -w /data/ rvolosatovs/protoc:4.0.0 \
-		--proto_path=${PROTO_DIR}=${SOURCE_DIR}/${PROTO_DIR} \
-		--python_out=${SOURCE_DIR} \
-		--grpc-python_out=${SOURCE_DIR} \
-		${SOURCE_DIR}/${PROTO_DIR}/*.proto
+	docker run -t --rm -u $$(id -u):$$(id -g) -v $(PROJECT_DIR):/data/ -w /data rvolosatovs/protoc:4.0.0 \
+			--proto_path=app/proto=${SOURCE_DIR}/app/proto \
+			--python_out=${SOURCE_DIR} \
+			--grpc-python_out=${SOURCE_DIR} \
+			${SOURCE_DIR}/app/proto/*.proto
+
+venv:
+	python3.9 -m venv ${VENV_DIR} \
+			&& ${VENV_DIR}/bin/pip install -r requirements-dev.txt
 
 build: proto
 
-image:
+run: venv proto
+	docker run --rm -it -u $$(id -u):$$(id -g) -v $$(pwd):/data -w /data -e HOME=/data --entrypoint /bin/sh python:3.9-slim \
+			-c 'ln -sf $$(which python) ${VENV_DIR}/bin/python-docker \
+					&& PYTHONPATH=${SOURCE_DIR} GRPC_VERBOSITY=debug ${VENV_DIR}/bin/python-docker -m app'
+
+help: venv proto
+	docker run --rm -t -u $$(id -u):$$(id -g) -v $$(pwd):/data -w /data -e HOME=/data --entrypoint /bin/sh python:3.9-slim \
+			-c 'ln -sf $$(which python) ${VENV_DIR}/bin/python-docker \
+					&& PYTHONPATH=${SOURCE_DIR} ${VENV_DIR}/bin/python-docker -m app --help'
+
+image: proto
 	docker buildx build -t ${IMAGE_NAME} --load .
 
-imagex:
-	docker buildx inspect $(BUILDER) || docker buildx create --name $(BUILDER) --use
+imagex: proto
+	docker buildx inspect $(BUILDER) || docker buildx create --name $(BUILDER) --use 
 	docker buildx build -t ${IMAGE_NAME} --platform linux/arm64/v8,linux/amd64 .
 	docker buildx build -t ${IMAGE_NAME} --load .
 	docker buildx rm --keep-state $(BUILDER)
 
-imagex_push:
+imagex_push: proto
 	@test -n "$(IMAGE_TAG)" || (echo "IMAGE_TAG is not set (e.g. 'v0.1.0', 'latest')"; exit 1)
 	@test -n "$(REPO_URL)" || (echo "REPO_URL is not set"; exit 1)
 	docker buildx inspect $(BUILDER) || docker buildx create --name $(BUILDER) --use
 	docker buildx build -t ${REPO_URL}:${IMAGE_TAG} --platform linux/arm64/v8,linux/amd64 --push .
 	docker buildx rm --keep-state $(BUILDER)
 
-lint:
-	rm -f lint.err
-	docker run --rm -t -u $$(id -u):$$(id -g) -v $$(pwd):/data -w /data -e PIP_CACHE_DIR=/data/.cache/pip -e PYLINTHOME=/data/.cache/pylint  --entrypoint /bin/sh python:3.9-slim \
-			-c 'PYTHONPATH=${TESTS_DIR}:${SOURCE_DIR}:${PROTO_DIR} ${VENV_DEV_DIR}/${PYTHON_EXEC_PATH} -m pylint -j 0 app || exit $$(( $$? & (1+2+32) ))' \
-					|| touch lint.err
-	[ ! -f lint.err ]
-
-beautify:
-	docker run -t --rm -u $$(id -u):$$(id -g) -v $$(pwd):/data/ -w /data/ cytopia/black:22-py3.9 \
-		${SOURCE_DIR} \
-		${TESTS_DIR}
-
-test:
-	docker run --rm -t -u $$(id -u):$$(id -g) -v $$(pwd):/data -w /data -e PIP_CACHE_DIR=/data/.cache/pip --entrypoint /bin/sh python:3.9-slim \
-			-c 'PYTHONPATH=${TESTS_DIR}:${SOURCE_DIR}:${PROTO_DIR} ${VENV_DEV_DIR}/${PYTHON_EXEC_PATH} -m app_tests'
-
-help:
-	docker run --rm -t -u $$(id -u):$$(id -g) -v $$(pwd):/data -w /data -e PIP_CACHE_DIR=/data/.cache/pip --entrypoint /bin/sh python:3.9-slim \
-			-c 'PYTHONPATH=${SOURCE_DIR}:${PROTO_DIR} ${VENV_DIR}/${PYTHON_EXEC_PATH} -m app --help'
-
-run:
-	docker run --rm -t -u $$(id -u):$$(id -g) -v $$(pwd):/data -w /data -e PIP_CACHE_DIR=/data/.cache/pip --entrypoint /bin/sh python:3.9-slim \
-			-c 'GRPC_VERBOSITY=debug PYTHONPATH=${SOURCE_DIR}:${PROTO_DIR} ${VENV_DIR}/${PYTHON_EXEC_PATH} -m app'
+test: venv proto
+	docker run --rm -t -u $$(id -u):$$(id -g) -v $$(pwd):/data -w /data -e HOME=/data --entrypoint /bin/sh python:3.9-slim \
+			-c 'ln -sf $$(which python) ${VENV_DIR}/bin/python-docker \
+					&& PYTHONPATH=${SOURCE_DIR} ${VENV_DIR}/bin/python-docker -m tests'
 
 test_functional_local_hosted: proto
 	@test -n "$(ENV_PATH)" || (echo "ENV_PATH is not set"; exit 1)
-	docker build --tag rotating-shop-items-test-functional -f tests/functional/Dockerfile tests/functional
+	docker build --tag rotating-items-test-functional -f test/functional/Dockerfile test/functional
 	docker run --rm -t \
 		--env-file $(ENV_PATH) \
 		-e HOME=/data \
 		-u $$(id -u):$$(id -g) \
 		-v $$(pwd):/data \
-		-w /data rotating-shop-items-test-functional bash ./tests/functional/test-local-hosted.sh
+		-w /data  rotating-items-test-functional bash ./test/functional/test-local-hosted.sh
 
 test_functional_accelbyte_hosted: proto
 	@test -n "$(ENV_PATH)" || (echo "ENV_PATH is not set"; exit 1)
-	docker build --tag rotating-shop-items-test-functional -f tests/functional/Dockerfile tests/functional
+	docker build --tag  rotating-items-test-functional -f test/functional/Dockerfile test/functional
 	docker run --rm -t \
 		--env-file $(ENV_PATH) \
 		-e HOME=/data \
@@ -98,7 +77,7 @@ test_functional_accelbyte_hosted: proto
 		--group-add $$(getent group docker | cut -d ':' -f 3) \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v $$(pwd):/data \
-		-w /data rotating-shop-items-test-functional bash ./tests/functional/test-accelbyte-hosted.sh
+		-w /data  rotating-items-test-functional bash ./test/functional/test-accelbyte-hosted.sh
 
 ngrok:
 	@test -n "$(NGROK_AUTHTOKEN)" || (echo "NGROK_AUTHTOKEN is not set" ; exit 1)
