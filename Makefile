@@ -2,6 +2,7 @@ BUILDER := grpc-plugin-server-builder
 IMAGE_NAME := $(shell basename "$$(pwd)")-app
 
 SOURCE_DIR := src
+TEST_DIR := test
 VENV_DIR := venv
 
 PROJECT_DIR ?= $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
@@ -54,7 +55,7 @@ imagex_push: proto
 test: venv proto
 	docker run --rm -t -u $$(id -u):$$(id -g) -v $$(pwd):/data -w /data -e HOME=/data --entrypoint /bin/sh python:3.9-slim \
 			-c 'ln -sf $$(which python) ${VENV_DIR}/bin/python-docker \
-					&& PYTHONPATH=${SOURCE_DIR} ${VENV_DIR}/bin/python-docker -m tests'
+					&& PYTHONPATH=${SOURCE_DIR}:${TEST_DIR} ${VENV_DIR}/bin/python-docker -m app_tests'
 
 test_functional_local_hosted: proto
 	@test -n "$(ENV_PATH)" || (echo "ENV_PATH is not set"; exit 1)
