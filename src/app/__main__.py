@@ -60,7 +60,7 @@ async def main(port: int, **kwargs) -> None:
     logger.addHandler(logging.StreamHandler())
 
     with env.prefixed("AB_"):
-        base_url = env("BASE_URL", "https://demo.accelbyte.io")
+        base_url = env("BASE_URL", "https://test.accelbyte.io")
         client_id = env("CLIENT_ID", None)
         client_secret = env("CLIENT_SECRET", None)
         namespace = env("NAMESPACE", "accelbyte")
