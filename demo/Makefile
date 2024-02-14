@@ -8,4 +8,5 @@ setup:
 	${VENV_DIR}/${VENV_EXEC_DIR}/pip install requests httpx websockets pyyaml pyjwt accelbyte-py-sdk
 
 run:
-	${VENV_DIR}/${VENV_EXEC_DIR}/${PYTHON_EXEC} demo.py GRPC_SERVER_URL
+	@test -n "$(GRPC_SERVER_URL)" || (echo "GRPC_SERVER_URL is not set"; exit 1)
+	${VENV_DIR}/${VENV_EXEC_DIR}/${PYTHON_EXEC} demo.py ${GRPC_SERVER_URL} rotation
