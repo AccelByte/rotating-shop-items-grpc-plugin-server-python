@@ -91,7 +91,7 @@ def create_item(namespace : str, store_id : str, category_path : str, item_base_
             localizations={"en": platform_models.Localization.create(title=title)},
             region_data={"US" : [platform_models.RegionDataItem.create(
                 currency_code="USD",
-                currency_namespace="accelbyte",
+                currency_namespace=namespace,
                 currency_type=platform_models.RegionDataItemCurrencyTypeEnum.REAL,
                 price=(item_base_index+1)*2
             )]}
@@ -234,7 +234,7 @@ def main():
         
         client_sdk.initialize()
         user_sdk.initialize()
-        
+
         print("# Arrange")
         print("## Login user")
         _, error = auth_service.login_user(username=username, password=password, sdk=user_sdk)
