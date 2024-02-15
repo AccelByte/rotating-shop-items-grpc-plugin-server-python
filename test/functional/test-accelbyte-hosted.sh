@@ -6,7 +6,7 @@ set -e
 set -o pipefail
 #set -x
 
-APP_NAME=int-test-rotating
+APP_NAME=int-rt
 
 get_code_verifier() 
 {
