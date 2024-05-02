@@ -41,7 +41,7 @@ platform service in `AccelByte Gaming Services`.
 
    c. [docker v23.x](https://docs.docker.com/engine/install/ubuntu/)
 
-   d. python v3.9
+   d. python v3.10
 
    e. [postman](https://www.postman.com/)
 

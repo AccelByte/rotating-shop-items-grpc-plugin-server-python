@@ -25,7 +25,7 @@ proto: clean
 			${SOURCE_DIR}/app/proto/*.proto
 
 venv:
-	python3.9 -m venv ${VENV_DIR} \
+	python3.10 -m venv ${VENV_DIR} \
 			&& ${VENV_DIR}/bin/pip install -r requirements-dev.txt
 
 build: proto
