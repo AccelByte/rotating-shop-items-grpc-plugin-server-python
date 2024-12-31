@@ -3,13 +3,9 @@
 # and restrictions contact your company contract manager.
 
 import asyncio
-import json
 import logging
 
-from argparse import ArgumentParser
 from enum import IntFlag
-from pathlib import Path
-from typing import Optional
 
 from environs import Env
 
@@ -42,7 +38,7 @@ class PermissionAction(IntFlag):
     DELETE = 0b1000
 
 
-async def main(port: int, **kwargs) -> None:
+async def main(**kwargs) -> None:
     env = Env(
         eager=kwargs.get("env_eager", True),
         expand_vars=kwargs.get("env_expand_vars", False),
@@ -53,6 +49,8 @@ async def main(port: int, **kwargs) -> None:
         verbose=kwargs.get("env_verbose", False),
         override=kwargs.get("env_override", False),
     )
+
+    port: int = env.int("PORT", DEFAULT_APP_PORT)
 
     opts = []
     logger = logging.getLogger("app")
@@ -82,8 +80,8 @@ async def main(port: int, **kwargs) -> None:
             from accelbyte_py_sdk.token_validation.caching import CachingTokenValidator
             from accelbyte_py_sdk.services.auth import login_client, LoginClientTimer
 
-            resource = env("RESOURCE", "ADMIN:NAMESPACE:{namespace}:PIRGRPCSERVICE:CONFIG")
-            action = env.int("ACTION", int(PermissionAction.READ | PermissionAction.UPDATE))
+            resource = env("RESOURCE", None)
+            action = env.int("ACTION", None)
 
             config = MyConfigRepository(base_url, client_id, client_secret, namespace)
             token = InMemoryTokenRepository()
@@ -120,22 +118,5 @@ async def main(port: int, **kwargs) -> None:
     await App(port, env, opts=opts).run()
 
 
-def parse_args():
-    parser = ArgumentParser()
-
-    parser.add_argument(
-        "-p",
-        "--port",
-        default=DEFAULT_APP_PORT,
-        type=int,
-        required=False,
-        help="[P]ort",
-    )
-
-    result = vars(parser.parse_args())
-
-    return result
-
-
 if __name__ == "__main__":
-    asyncio.run(main(**parse_args()))
+    asyncio.run(main())
