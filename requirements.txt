@@ -16,9 +16,9 @@ environs==9.5.0
 
 accelbyte-py-sdk
 bitarray
-httpx
+httpx[http2]
 mmh3
-pyjwt[crypto]
-pyyaml
+PyJWT[crypto]
+PyYAML
 requests
 websockets
