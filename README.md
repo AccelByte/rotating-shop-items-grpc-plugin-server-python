@@ -324,6 +324,8 @@ can use something like [ngrok](https://ngrok.com/).
    make ngrok NGROK_AUTHTOKEN=xxxxxxxxxxx
    ```
 
+   > :warning: **Ngrok free plan has some limitations**: You may want to use paid plan if the traffic is high.
+
    > :warning: **If you are running [grpc-plugin-dependencies](https://github.com/AccelByte/grpc-plugin-dependencies) stack alongside this app as mentioned in [Test Observability](#test-observability)**: Run the above 
    command in `grpc-plugin-dependencies` directory instead of this app directory. 
    This way, the `gRPC server` will be called via `Envoy` service within `grpc-plugin-dependencies` stack instead of directly.
@@ -344,27 +346,9 @@ can use something like [ngrok](https://ngrok.com/).
       - Platform Store -> Currency (Create, Read, Delete)
       - Platform Store -> Item (Create, Read, Delete)
 
-   > :warning: **Oauth Client created in this step is different from the one from Setup section:** It is required by CLI demo app [here](demo/) in the next step to register the `gRPC Server` URL.
+   > :warning: **Oauth Client created in this step is different from the one from Prerequisites section:** It is required by the Postman collection in the next step to register the `gRPC Server` URL and also to create and delete test users.
 
-5. Create a user for testing. Keep the `Username` and `Password`.
-
-6. Set the necessary environment variables and run the [demo.py](demo/demo.py) script. The script will setup the necessary configuration, create test data, and run a user operation that triggers either `rotation` or `backfill` function in this app.
-
-   ```
-   export AB_BASE_URL='https://test.accelbyte.io'
-   export AB_CLIENT_ID='xxxxxxxxxx'       # Use Client ID from the previous step
-   export AB_CLIENT_SECRET='xxxxxxxxxx'   # Use Client secret from the previous step
-   export AB_NAMESPACE='xxxxxxxxxx'       # Use your Namespace ID
-   export AB_USERNAME='xxxxxxxxxx'        # Use the username of test user you created
-   export AB_PASSWORD='xxxxxxxxxx'        # Use the password of test user you created
-   cd demo                 # Go to demo folder in project
-   make setup              # Run makefile target to setup virtualenv venv
-   . venv/bin/activate     # Activate virtualenv venv
-   python demo.py 0.tcp.ap.ngrok.io:xxxxx rotation    # For rotation function, using your ngrok forwarding URL
-   python demo.py 0.tcp.ap.ngrok.io:xxxxx backfill    # For backfill function, using your ngrok forwarding URL
-   ```
- 
-> :warning: **Ngrok free plan has some limitations**: You may want to use paid plan if the traffic is high.
+5. Follow the instructions in the [Postman collection](demo/rotating-shop-items-demo.postman_collection.json) overview to set up the environment, using the `Client ID` and `Client Secret` from the previous step. Pay attention to this app console log when extend app flow is running. At least one of the `gRPC Server` methods should get called when you run all the requests in the collection.
 
 ### Test Observability
 
