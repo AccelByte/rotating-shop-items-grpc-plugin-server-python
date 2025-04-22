@@ -12,7 +12,7 @@ opentelemetry-instrumentation-httpx==0.35b0
 opentelemetry-instrumentation-requests==0.35b0
 opentelemetry-propagator-b3==1.19.0
 protobuf==3.19.4
-environs==9.5.0
+environs==14.1.1
 
 accelbyte-py-sdk
 bitarray
