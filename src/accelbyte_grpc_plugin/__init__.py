@@ -45,7 +45,7 @@ class App:
         self.env = env
         self.logger = logger
 
-        self.service_name = self.env("SERVICE_NAME", "app")
+        self.service_name = self.env("SERVICE_NAME", self.env("OTEL_SERVICE_NAME", "app"))
         self.grpc_interceptors: List[ServerInterceptor] = [aio_server_interceptor()]
         self.grpc_service_names: List[str] = []
         self.otel_metric_readers: List[MetricReader] = []
