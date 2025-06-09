@@ -8,11 +8,6 @@ IMAGE_NAME := $(shell basename "$$(pwd)")-app
 PYTHON_VERSION := 3.10
 
 SOURCE_DIR := src
-TEST_DIR := test
-
-TEST_SAMPLE_CONTAINER_NAME := sample-override-test
-
-.PHONY: test
 
 clean:
 	cd ${SOURCE_DIR}/app/proto \
@@ -36,7 +31,7 @@ run:
 		--entrypoint /bin/sh \
 		python:${PYTHON_VERSION}-slim \
 		-c 'python -m pip install -r requirements.txt \
-			&& PYTHONPATH=${SOURCE_DIR}:${TEST_DIR} python -m app'
+			&& PYTHONPATH=${SOURCE_DIR} python -m app'
 
 help:
 	docker run --rm -it -u $$(id -u):$$(id -g) \
@@ -47,7 +42,7 @@ help:
 		--entrypoint /bin/sh \
 		python:${PYTHON_VERSION}-slim \
 		-c 'python -m pip install -r requirements.txt \
-			&& PYTHONPATH=${SOURCE_DIR}:${TEST_DIR} python -m app --help'
+			&& PYTHONPATH=${SOURCE_DIR} python -m app --help'
 
 image:
 	docker buildx build -t ${IMAGE_NAME} --load .
@@ -64,16 +59,6 @@ imagex_push:
 	docker buildx inspect $(BUILDER) || docker buildx create --name $(BUILDER) --use
 	docker buildx build -t ${REPO_URL}:${IMAGE_TAG} --platform linux/amd64 --push .
 	docker buildx rm --keep-state $(BUILDER)
-
-test:
-	docker run --rm -t \
-		-u $$(id -u):$$(id -g) \
-		-v $$(pwd):/data \
-		-w /data -e HOME=/data \
-		--entrypoint /bin/sh \
-		python:${PYTHON_VERSION}-slim \
-		-c 'python -m pip install -r requirements-dev.txt \
-			&& PYTHONPATH=${SOURCE_DIR}:${TEST_DIR} python -m app_tests'
 
 ngrok:
 	@which ngrok || (echo "ngrok is not installed" ; exit 1)
