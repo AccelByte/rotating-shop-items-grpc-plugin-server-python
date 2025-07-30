@@ -12,7 +12,7 @@ from google.protobuf.json_format import MessageToDict
 
 from accelbyte_py_sdk import AccelByteSDK
 
-from ..proto.section_pb2 import (
+from section_pb2 import (
     BackfillRequest,
     BackfilledItemObject,
     RotationItemObject,
@@ -22,7 +22,7 @@ from ..proto.section_pb2 import (
     SectionItemObject,
     DESCRIPTOR,
 )
-from ..proto.section_pb2_grpc import SectionServicer
+from section_pb2_grpc import SectionServicer
 
 
 class AsyncSectionService(SectionServicer):

@@ -26,7 +26,7 @@ from accelbyte_grpc_plugin import (
 )
 from accelbyte_grpc_plugin.utils import instrument_sdk_http_client
 
-from .proto.section_pb2_grpc import add_SectionServicer_to_server
+from section_pb2_grpc import add_SectionServicer_to_server
 from .services.section_service import AsyncSectionService
 from .utils import create_env
 

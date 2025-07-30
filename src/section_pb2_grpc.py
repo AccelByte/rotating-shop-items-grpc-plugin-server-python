@@ -2,7 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-from app.proto import section_pb2 as app_dot_proto_dot_section__pb2
+import section_pb2 as section__pb2
 
 
 class SectionStub(object):
@@ -16,13 +16,13 @@ class SectionStub(object):
         """
         self.GetRotationItems = channel.unary_unary(
                 '/accelbyte.platform.catalog.section.v1.Section/GetRotationItems',
-                request_serializer=app_dot_proto_dot_section__pb2.GetRotationItemsRequest.SerializeToString,
-                response_deserializer=app_dot_proto_dot_section__pb2.GetRotationItemsResponse.FromString,
+                request_serializer=section__pb2.GetRotationItemsRequest.SerializeToString,
+                response_deserializer=section__pb2.GetRotationItemsResponse.FromString,
                 )
         self.Backfill = channel.unary_unary(
                 '/accelbyte.platform.catalog.section.v1.Section/Backfill',
-                request_serializer=app_dot_proto_dot_section__pb2.BackfillRequest.SerializeToString,
-                response_deserializer=app_dot_proto_dot_section__pb2.BackfillResponse.FromString,
+                request_serializer=section__pb2.BackfillRequest.SerializeToString,
+                response_deserializer=section__pb2.BackfillResponse.FromString,
                 )
 
 
@@ -53,13 +53,13 @@ def add_SectionServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'GetRotationItems': grpc.unary_unary_rpc_method_handler(
                     servicer.GetRotationItems,
-                    request_deserializer=app_dot_proto_dot_section__pb2.GetRotationItemsRequest.FromString,
-                    response_serializer=app_dot_proto_dot_section__pb2.GetRotationItemsResponse.SerializeToString,
+                    request_deserializer=section__pb2.GetRotationItemsRequest.FromString,
+                    response_serializer=section__pb2.GetRotationItemsResponse.SerializeToString,
             ),
             'Backfill': grpc.unary_unary_rpc_method_handler(
                     servicer.Backfill,
-                    request_deserializer=app_dot_proto_dot_section__pb2.BackfillRequest.FromString,
-                    response_serializer=app_dot_proto_dot_section__pb2.BackfillResponse.SerializeToString,
+                    request_deserializer=section__pb2.BackfillRequest.FromString,
+                    response_serializer=section__pb2.BackfillResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -83,8 +83,8 @@ class Section(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/accelbyte.platform.catalog.section.v1.Section/GetRotationItems',
-            app_dot_proto_dot_section__pb2.GetRotationItemsRequest.SerializeToString,
-            app_dot_proto_dot_section__pb2.GetRotationItemsResponse.FromString,
+            section__pb2.GetRotationItemsRequest.SerializeToString,
+            section__pb2.GetRotationItemsResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -100,7 +100,7 @@ class Section(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/accelbyte.platform.catalog.section.v1.Section/Backfill',
-            app_dot_proto_dot_section__pb2.BackfillRequest.SerializeToString,
-            app_dot_proto_dot_section__pb2.BackfillResponse.FromString,
+            section__pb2.BackfillRequest.SerializeToString,
+            section__pb2.BackfillResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
