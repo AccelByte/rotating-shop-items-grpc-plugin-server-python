@@ -3,7 +3,7 @@
 # and restrictions contact your company contract manager.
 
 import opentelemetry.trace
-from opentelemetry.exporter.zipkin.proto.http import ZipkinExporter
+from opentelemetry.exporter.zipkin.json import ZipkinExporter
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 from accelbyte_grpc_plugin import App, AppOptABC, AppOptOrder

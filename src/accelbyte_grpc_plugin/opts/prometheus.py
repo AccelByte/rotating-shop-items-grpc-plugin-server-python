@@ -34,4 +34,4 @@ class PrometheusOpt(AppOptABC):
                     use_reloader=False,
                 )
             ).start()
-            app.otel_metric_readers.append(PrometheusMetricReader(prefix=prefix))
+            app.otel_metric_readers.append(PrometheusMetricReader(prefix))
